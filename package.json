@@ -15,7 +15,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node get-users.js"
   },
   "devDependencies": {
     "@types/node": "^24.0.1",
