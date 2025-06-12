@@ -3,9 +3,8 @@ import { z } from 'zod'
 import { getApiTokens } from './get-api-tokens.js'
 import { createEncodedPayload } from './create-encoded-payload.js'
 import { getCookieHeader } from './getCookieHeader.js'
-
 ;(async () => {
-  const cookieHeader = getCookieHeader()
+  const cookieHeader = await getCookieHeader()
 
   const userSchema = z.object({
     id: z.string(),
