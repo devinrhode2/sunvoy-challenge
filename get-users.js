@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 ;(async () => {
   const usersList = await (
     await fetch('https://challenge.sunvoy.com/api/users', {
@@ -11,7 +12,7 @@
     })
   ).json()
 
-  console.log({ usersList })
+  await writeFile('users.json', JSON.stringify(usersList, null, 2))
 })().catch((e) => {
   console.error('Uncaught promise rejection', e)
   process.exit(1) // Maybe `throw new Error` is more semantic way to crash???
