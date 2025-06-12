@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises'
 import { z } from 'zod'
-import { createHmac } from 'node:crypto'
 import { getApiTokens } from './get-api-tokens.js'
+import { createEncodedPayload } from './create-encoded-payload.js'
 ;(async () => {
   const usersList = await (
     await fetch('https://challenge.sunvoy.com/api/users', {
@@ -20,35 +20,12 @@ import { getApiTokens } from './get-api-tokens.js'
   // Part 3 - get currently authenticated user's information.
   const apiTokens = await getApiTokens()
 
-  const timestamp = Math.floor(Date.now() / 1e3).toString()
-
-  const finalPayload = {
-    ...apiTokens,
-    timestamp,
-  }
-
-  const basePayload = Object.keys(finalPayload)
-    .sort()
-    .map(
-      (key) =>
-        `${key}=${encodeURIComponent(
-          // @ts-expect-error - not really worth solving..
-          finalPayload[key]
-        )}`
-    )
-    .join('&')
-
-  const encrypter = createHmac('sha1', 'mys3cr3t')
-  encrypter.update(basePayload)
-
-  const checkcode = encrypter.digest('hex').toUpperCase()
-
   const currentUser = await (
     await fetch('https://api.challenge.sunvoy.com/api/settings', {
       headers: {
         'content-type': 'application/x-www-form-urlencoded',
       },
-      body: `${basePayload}&checkcode=${checkcode}`,
+      body: createEncodedPayload(apiTokens),
       method: 'POST',
     })
   ).json()
