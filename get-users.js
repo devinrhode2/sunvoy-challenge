@@ -1,6 +1,7 @@
 import { writeFile } from 'node:fs/promises'
 import { JSDOM } from 'jsdom'
 import { z } from 'zod'
+import { createHmac } from 'node:crypto'
 ;(async () => {
   const usersList = await (
     await fetch('https://challenge.sunvoy.com/api/users', {
@@ -59,6 +60,40 @@ import { z } from 'zod'
   })
 
   const apiTokens = apiTokensSchema.parse(apiTokensRaw)
+
+  const timestamp = Math.floor(Date.now() / 1e3).toString()
+
+  const finalPayload = {
+    ...apiTokens,
+    timestamp,
+  }
+
+  const basePayload = Object.keys(finalPayload)
+    .sort()
+    .map(
+      (key) =>
+        `${key}=${encodeURIComponent(
+          // @ts-expect-error - not really worth solving..
+          finalPayload[key]
+        )}`
+    )
+    .join('&')
+
+  const encrypter = createHmac('sha1', 'mys3cr3t')
+  encrypter.update(basePayload)
+
+  const checkcode = encrypter.digest('hex').toUpperCase()
+
+  const currentUser = await (
+    await fetch('https://api.challenge.sunvoy.com/api/settings', {
+      headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: `${basePayload}&checkcode=${checkcode}`,
+      method: 'POST',
+    })
+  ).json()
+  console.log({ currentUser })
 })().catch((e) => {
   console.error('Uncaught promise rejection', e)
   process.exit(1) // Maybe `throw new Error` is more semantic way to crash???
