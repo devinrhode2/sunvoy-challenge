@@ -1,5 +1,6 @@
 import { writeFile } from 'node:fs/promises'
 import { JSDOM } from 'jsdom'
+import { z } from 'zod'
 ;(async () => {
   const usersList = await (
     await fetch('https://challenge.sunvoy.com/api/users', {
@@ -35,11 +36,29 @@ import { JSDOM } from 'jsdom'
     'input[type="hidden"]'
   )
 
-  const payload = {}
-  hiddenInputNodes.forEach((node) => {
-    payload[node.id] = node.value
+  // NOTE: there is probably a better dom parsing lib which has solid TS support..
+  /** @type {Record<string, string>} */
+  const apiTokensRaw = {}
+  hiddenInputNodes.forEach((/** @type {unknown} */ nodeRaw) => {
+    const node = z
+      .object({
+        id: z.string(),
+        value: z.string(),
+      })
+      .parse(nodeRaw)
+    apiTokensRaw[node.id] = node.value
   })
-  console.log({ payload })
+
+  const apiTokensSchema = z.object({
+    access_token: z.string(),
+    openId: z.string(),
+    userId: z.string(),
+    apiuser: z.string(),
+    operateId: z.string(),
+    language: z.string(),
+  })
+
+  const apiTokens = apiTokensSchema.parse(apiTokensRaw)
 })().catch((e) => {
   console.error('Uncaught promise rejection', e)
   process.exit(1) // Maybe `throw new Error` is more semantic way to crash???
