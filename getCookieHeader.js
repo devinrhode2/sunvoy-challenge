@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
+import axios from 'axios'
 
 const getNonce = async () => {
   const loginPageHtml = await (
