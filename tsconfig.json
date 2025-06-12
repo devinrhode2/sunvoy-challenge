@@ -11,12 +11,19 @@
     /* Strictness */
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "verbatimModuleSyntax": true, // from https://github.com/tsconfig/bases/blob/main/bases/node-ts.json
     /* If transpiling with TypeScript: */
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
     "outDir": "dist",
     "sourceMap": true,
     /* If your code doesn't run in the DOM: */
-    "lib": ["es2022"]
+    "lib": [
+      // from https://github.com/tsconfig/bases/blob/main/bases/node22.json
+      "es2024",
+      "ESNext.Array",
+      "ESNext.Collection",
+      "ESNext.Iterator"
+    ]
   }
 }
