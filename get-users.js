@@ -58,6 +58,11 @@ import { getCookieHeader } from './getCookieHeader.js'
   usersList.push(currentUserRaw)
 
   await writeFile('users.json', JSON.stringify(usersList, null, 2))
+
+  console.log(
+    'wrote users.json with current user at end. usersList.length:',
+    usersList.length
+  )
 })().catch((e) => {
   console.error('Uncaught promise rejection', e)
   process.exit(1) // Maybe `throw new Error` is more semantic way to crash???
