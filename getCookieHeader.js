@@ -1,7 +1,6 @@
 import { JSDOM } from 'jsdom'
 import { readFile, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
-import { setTimeout } from 'node:timers/promises'
 import { execSync } from 'node:child_process'
 
 const getNonce = async () => {
@@ -44,9 +43,6 @@ export const getCookieHeader = async () => {
   const credentials = credentialsSchema.parse(JSON.parse(creds))
 
   // POST request to login
-  console.log('pretending to type the login...')
-  await setTimeout(300)
-
   const payload = new URLSearchParams({
     nonce,
     ...credentials,
