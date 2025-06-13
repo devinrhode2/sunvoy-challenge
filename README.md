@@ -10,4 +10,4 @@
 
 1. Remove stored login data (cookies) by running `npm run clean`.
 
-Demo video:
+Demo video: https://www.loom.com/share/d6cfa1fb2ed846e495b3a965a1b7ae4e
