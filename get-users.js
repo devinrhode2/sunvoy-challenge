@@ -26,6 +26,8 @@ import { getCookieHeader } from './getCookieHeader.js'
 
   await writeFile('users.json', JSON.stringify(usersListRaw, null, 2))
 
+  console.log('wrote users.json')
+
   if (!Array.isArray(usersListRaw)) {
     throw new Error(
       'usersList is not an array. Code should be updated so we can .push current user to end.'

@@ -15,7 +15,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "start": "node get-users.js"
+    "start": "node get-users.js",
+    "clean": "rm cookies-header.json"
   },
   "devDependencies": {
     "@types/jsdom": "^21.1.7",

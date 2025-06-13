@@ -1,7 +1,8 @@
 import { JSDOM } from 'jsdom'
-import { readFile, writeFile } from 'node:fs/promises'
+import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import { execSync } from 'node:child_process'
+import { saveCookies, readSavedCookiesString } from './manageSavedCookies.js'
 
 const getNonce = async () => {
   const loginPageHtml = await (
@@ -29,16 +30,21 @@ const getNonce = async () => {
 }
 
 export const getCookieHeader = async () => {
-  // TODO: Add an initial check to see if if cookie-header.json has an un-expired cookie string.
+  const savedCookieString = await readSavedCookiesString()
+
+  if (savedCookieString && savedCookieString.length > 0) {
+    console.log('using savedCookieString')
+    return savedCookieString
+  }
 
   const nonce = await getNonce()
 
-  // In the isolated context of this challenge, getting the credentials with a static import statement seems preferable in style in performance.
-  // This approach is more amenable to further changes, where the credentials.json could change throughout the course of running this script.
   const credentialsSchema = z.object({
     username: z.string(),
     password: z.string(),
   })
+  // In the isolated context of this challenge, getting the credentials with a static import statement seems preferable in style in performance.
+  // This approach is more amenable to further changes, where the credentials.json could change throughout the course of running this script.
   const creds = (await readFile('credentials.json')).toString()
   const credentials = credentialsSchema.parse(JSON.parse(creds))
 
@@ -112,17 +118,10 @@ export const getCookieHeader = async () => {
     })
     .join('; ')
 
-  await writeFile(
-    'cookies-header.json',
-    JSON.stringify(
-      {
-        cookiesString,
-        expiresUnixTimestamp: Date.now() + lowestMaxAge * 1000,
-      },
-      null,
-      2
-    )
-  )
+  await saveCookies({
+    cookiesString,
+    expiresUnixTimestamp: Date.now() + lowestMaxAge * 1000,
+  })
 
   console.log({ cookiesString })
 
