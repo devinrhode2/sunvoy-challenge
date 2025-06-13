@@ -16,6 +16,7 @@
     /* If transpiling with TypeScript: */
     "moduleResolution": "NodeNext",
     "module": "NodeNext",
+    "noEmit": true,
     /* If your code doesn't run in the DOM: */
     "lib": [
       // from https://github.com/tsconfig/bases/blob/main/bases/node22.json
