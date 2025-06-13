@@ -123,7 +123,5 @@ export const getCookieHeader = async () => {
     expiresUnixTimestamp: Date.now() + lowestMaxAge * 1000,
   })
 
-  console.log({ cookiesString })
-
   return cookiesString
 }

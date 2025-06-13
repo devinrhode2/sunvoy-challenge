@@ -28,15 +28,22 @@ export const saveCookies = async (
 }
 
 export const readSavedCookiesString = async () => {
-  const savedCookies = savedCookiesSchema.parse(
-    JSON.parse((await readFile(COOKIE_HEADER_JSON_FILE_PATH)).toString())
-  )
-  if (Date.now() < savedCookies.expiresUnixTimestamp) {
-    return savedCookies.cookiesString
-  } else {
-    unlink(COOKIE_HEADER_JSON_FILE_PATH).catch((e) => {
-      console.error(`Error deleting ${COOKIE_HEADER_JSON_FILE_PATH} !`, e)
+  return readFile(COOKIE_HEADER_JSON_FILE_PATH)
+    .then((savedCookiesJson) => {
+      const savedCookies = savedCookiesSchema.parse(
+        JSON.parse(savedCookiesJson.toString())
+      )
+      if (Date.now() < savedCookies.expiresUnixTimestamp) {
+        return savedCookies.cookiesString
+      } else {
+        unlink(COOKIE_HEADER_JSON_FILE_PATH).catch((e) => {
+          console.error(`Error deleting ${COOKIE_HEADER_JSON_FILE_PATH} !`, e)
+        })
+        return undefined
+      }
     })
-    return undefined
-  }
+    .catch((e) => {
+      // presumably the file does not exist. Just return undefined, same behavior as when cookie is expired.
+      return undefined
+    })
 }
