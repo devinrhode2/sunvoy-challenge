@@ -1,8 +1,8 @@
 import { JSDOM } from 'jsdom'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
-import nodeFetch from 'node-fetch'
 import { setTimeout } from 'node:timers/promises'
+import got from 'got'
 
 const getNonce = async () => {
   const loginPageHtml = await (
@@ -47,9 +47,7 @@ export const getCookieHeader = async () => {
   console.log('pretending to type the login...')
   await setTimeout(5000)
 
-  const loginResponse = await nodeFetch('https://challenge.sunvoy.com/login', {
-    method: 'POST',
-    compress: true,
+  const loginResponse = await got.post('https://challenge.sunvoy.com/login', {
     body: new URLSearchParams({
       nonce,
       ...credentials,
