@@ -46,7 +46,12 @@ export const getCookieHeader = async () => {
 
   // POST request to login
   console.log('pretending to type the login...')
-  await setTimeout(5000)
+  await setTimeout(3000)
+
+  const payload = new URLSearchParams({
+    nonce,
+    ...credentials,
+  }).toString()
 
   const loginResponse = execSync(
     `curl -i 'https://challenge.sunvoy.com/login' \
@@ -66,8 +71,13 @@ export const getCookieHeader = async () => {
   -H 'sec-fetch-user: ?1' \
   -H 'upgrade-insecure-requests: 1' \
   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36' \
-  --data-raw 'nonce=${nonce}&username=demo%40example.org&password=test'`
+  --data-raw '${payload}'`
   ).toString()
+  const setCookieLines = loginResponse
+    .split('\n')
+    .filter((line) => line.startsWith('set-cookie: '))
+    .map((line) => line.replace('set-cookie: ', ''))
+  console.log('setCookieLines', setCookieLines)
 
   // await gotScraping.post('https://challenge.sunvoy.com/login', {
   //   body: new URLSearchParams({
