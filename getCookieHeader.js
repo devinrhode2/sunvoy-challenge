@@ -2,7 +2,8 @@ import { JSDOM } from 'jsdom'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import { setTimeout } from 'node:timers/promises'
-import got from 'got'
+import { gotScraping } from 'got-scraping'
+import { execSync } from 'node:child_process'
 
 const getNonce = async () => {
   const loginPageHtml = await (
@@ -47,31 +48,53 @@ export const getCookieHeader = async () => {
   console.log('pretending to type the login...')
   await setTimeout(5000)
 
-  const loginResponse = await got.post('https://challenge.sunvoy.com/login', {
-    body: new URLSearchParams({
-      nonce,
-      ...credentials,
-    }).toString(),
-    headers: {
-      accept:
-        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-      'accept-language': 'en,en-US;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-      'cache-control': 'max-age=0',
-      'content-type': 'application/x-www-form-urlencoded',
-      priority: 'u=0, i',
-      'sec-ch-ua':
-        '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-      'sec-ch-ua-mobile': '?0',
-      'sec-ch-ua-platform': '"macOS"',
-      'sec-fetch-dest': 'document',
-      'sec-fetch-mode': 'navigate',
-      'sec-fetch-site': 'same-origin',
-      'sec-fetch-user': '?1',
-      'upgrade-insecure-requests': '1',
-      Referer: 'https://challenge.sunvoy.com/login',
-      'Referrer-Policy': 'strict-origin-when-cross-origin',
-    },
-  })
+  const loginResponse = execSync(
+    `curl -i 'https://challenge.sunvoy.com/login' \
+  -H 'accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7' \
+  -H 'accept-language: en,en-US;q=0.9,zh-CN;q=0.8,zh;q=0.7' \
+  -H 'cache-control: max-age=0' \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -H 'origin: https://challenge.sunvoy.com' \
+  -H 'priority: u=0, i' \
+  -H 'referer: https://challenge.sunvoy.com/login' \
+  -H 'sec-ch-ua: "Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"' \
+  -H 'sec-ch-ua-mobile: ?0' \
+  -H 'sec-ch-ua-platform: "macOS"' \
+  -H 'sec-fetch-dest: document' \
+  -H 'sec-fetch-mode: navigate' \
+  -H 'sec-fetch-site: same-origin' \
+  -H 'sec-fetch-user: ?1' \
+  -H 'upgrade-insecure-requests: 1' \
+  -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36' \
+  --data-raw 'nonce=${nonce}&username=demo%40example.org&password=test'`
+  ).toString()
+
+  // await gotScraping.post('https://challenge.sunvoy.com/login', {
+  //   body: new URLSearchParams({
+  //     nonce,
+  //     ...credentials,
+  //   }).toString(),
+  //   http2: true,
+  //   headers: {
+  //     accept:
+  //       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+  //     'accept-language': 'en,en-US;q=0.9,zh-CN;q=0.8,zh;q=0.7',
+  //     'cache-control': 'max-age=0',
+  //     'content-type': 'application/x-www-form-urlencoded',
+  //     priority: 'u=0, i',
+  //     'sec-ch-ua':
+  //       '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
+  //     'sec-ch-ua-mobile': '?0',
+  //     'sec-ch-ua-platform': '"macOS"',
+  //     'sec-fetch-dest': 'document',
+  //     'sec-fetch-mode': 'navigate',
+  //     'sec-fetch-site': 'same-origin',
+  //     'sec-fetch-user': '?1',
+  //     'upgrade-insecure-requests': '1',
+  //     Referer: 'https://challenge.sunvoy.com/login',
+  //     'Referrer-Policy': 'strict-origin-when-cross-origin',
+  //   },
+  // })
 
   console.log('loginResponse', loginResponse)
   loginResponse.headers.forEach((key, value) => {
