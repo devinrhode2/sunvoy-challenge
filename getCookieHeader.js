@@ -65,7 +65,7 @@ export const getCookieHeader = async () => {
     body: new URLSearchParams({
       nonce,
       ...credentials,
-    }),
+    }).toString(),
     method: 'POST',
   })
 
