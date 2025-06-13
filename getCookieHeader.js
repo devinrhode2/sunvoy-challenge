@@ -1,5 +1,5 @@
 import { JSDOM } from 'jsdom'
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 import { setTimeout } from 'node:timers/promises'
 import { execSync } from 'node:child_process'
@@ -79,29 +79,50 @@ export const getCookieHeader = async () => {
 
   console.log({ setCookieHeaders })
 
-  const parsedSetCookieHeaders = setCookieHeaders.map(
-    (setCookieHeaderValue) => {
-      return Object.fromEntries(
-        // This cookie parsing code is audacious, and probably fails in some unknown circumstances. A 3rd-party library may be advised if we run into issues.
-        // (In the context of this exercise, I am avoiding copy/pasting code from online or just using a lib here.)
-        setCookieHeaderValue.split('; ').map((cookieFlag) => {
-          return cookieFlag.toLowerCase().split('=')
-        })
-      )
-    }
-  )
+  const cookieFlagEntriesList = setCookieHeaders.map((setCookieHeaderValue) => {
+    // This cookie parsing code is audacious, and probably fails in some unknown circumstances. A 3rd-party library may be advised if we run into issues.
+    // (In the context of this exercise, I am avoiding copy/pasting code from online or just using a lib here.)
+    return setCookieHeaderValue.split('; ').map((rawCookieFlagString) => {
+      const cookieFlagEntries = rawCookieFlagString.toLowerCase().split('=')
+      return cookieFlagEntries
+    })
+  })
 
-  const lowestMaxAge = parsedSetCookieHeaders
-    .map((parsedSetCookieHeader) => {
-      return parseInt(parsedSetCookieHeader['max-age'], 10)
+  /** This cookie is considered expired in `lowestMaxAge` seconds. */
+  const lowestMaxAgeRaw = cookieFlagEntriesList
+    .map((cookieFlagEntries) => {
+      return parseInt(Object.fromEntries(cookieFlagEntries)['max-age'], 10)
     })
     .sort()
     .pop()
 
-  console.log({ lowestMaxAge })
-  const cookiesString = parsedSetCookieHeaders.map(() => {})
+  if (!lowestMaxAgeRaw && lowestMaxAgeRaw !== 0) {
+    console.error(
+      'lowestMaxAge is a non-zero falsey value! Defaulting to 0 (always fetch fresh cookies)',
+      {
+        lowestMaxAgeRaw,
+      }
+    )
+  }
+  const lowestMaxAge = lowestMaxAgeRaw || 0
 
-  // TODO: save valid cookiesString to cookie-header.json
+  const cookiesString = cookieFlagEntriesList
+    .map((cookieFlagEntries) => {
+      return cookieFlagEntries.shift()?.join('=')
+    })
+    .join(';')
 
-  return ''
+  await writeFile(
+    'cookies-header.json',
+    JSON.stringify(
+      {
+        cookiesString,
+        expiresUnixTimestamp: Date.now() + lowestMaxAge * 1000,
+      },
+      null,
+      2
+    )
+  )
+
+  return cookiesString
 }
