@@ -77,15 +77,19 @@ export const getCookieHeader = async () => {
     .filter((line) => line.startsWith('set-cookie: '))
     .map((line) => line.replace('set-cookie: ', ''))
 
-  console.log({ setCookieHeaders })
-
   const cookieFlagEntriesList = setCookieHeaders.map((setCookieHeaderValue) => {
     // This cookie parsing code is audacious, and probably fails in some unknown circumstances. A 3rd-party library may be advised if we run into issues.
     // (In the context of this exercise, I am avoiding copy/pasting code from online or just using a lib here.)
-    return setCookieHeaderValue.split('; ').map((rawCookieFlagString) => {
-      const cookieFlagEntries = rawCookieFlagString.toLowerCase().split('=')
-      return cookieFlagEntries
-    })
+    return setCookieHeaderValue
+      .split('; ')
+      .map((rawCookieFlagString, index) => {
+        const [key, value] = rawCookieFlagString.split('=')
+        return [
+          // Preserve casing on cookie NAME.
+          index !== 0 ? key?.toLowerCase() : key,
+          value,
+        ]
+      })
   })
 
   /** This cookie is considered expired in `lowestMaxAge` seconds. */
@@ -110,7 +114,7 @@ export const getCookieHeader = async () => {
     .map((cookieFlagEntries) => {
       return cookieFlagEntries.shift()?.join('=')
     })
-    .join(';')
+    .join('; ')
 
   await writeFile(
     'cookies-header.json',
@@ -123,6 +127,8 @@ export const getCookieHeader = async () => {
       2
     )
   )
+
+  console.log({ cookiesString })
 
   return cookiesString
 }
