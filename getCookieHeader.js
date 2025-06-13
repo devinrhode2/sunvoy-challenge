@@ -2,7 +2,6 @@ import { JSDOM } from 'jsdom'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 import { setTimeout } from 'node:timers/promises'
-import { gotScraping } from 'got-scraping'
 import { execSync } from 'node:child_process'
 
 const getNonce = async () => {
@@ -46,7 +45,7 @@ export const getCookieHeader = async () => {
 
   // POST request to login
   console.log('pretending to type the login...')
-  await setTimeout(3000)
+  await setTimeout(300)
 
   const payload = new URLSearchParams({
     nonce,
@@ -73,63 +72,36 @@ export const getCookieHeader = async () => {
   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36' \
   --data-raw '${payload}'`
   ).toString()
-  const setCookieLines = loginResponse
+  const setCookieHeaders = loginResponse
     .split('\n')
     .filter((line) => line.startsWith('set-cookie: '))
     .map((line) => line.replace('set-cookie: ', ''))
-  console.log('setCookieLines', setCookieLines)
 
-  // await gotScraping.post('https://challenge.sunvoy.com/login', {
-  //   body: new URLSearchParams({
-  //     nonce,
-  //     ...credentials,
-  //   }).toString(),
-  //   http2: true,
-  //   headers: {
-  //     accept:
-  //       'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-  //     'accept-language': 'en,en-US;q=0.9,zh-CN;q=0.8,zh;q=0.7',
-  //     'cache-control': 'max-age=0',
-  //     'content-type': 'application/x-www-form-urlencoded',
-  //     priority: 'u=0, i',
-  //     'sec-ch-ua':
-  //       '"Google Chrome";v="137", "Chromium";v="137", "Not/A)Brand";v="24"',
-  //     'sec-ch-ua-mobile': '?0',
-  //     'sec-ch-ua-platform': '"macOS"',
-  //     'sec-fetch-dest': 'document',
-  //     'sec-fetch-mode': 'navigate',
-  //     'sec-fetch-site': 'same-origin',
-  //     'sec-fetch-user': '?1',
-  //     'upgrade-insecure-requests': '1',
-  //     Referer: 'https://challenge.sunvoy.com/login',
-  //     'Referrer-Policy': 'strict-origin-when-cross-origin',
-  //   },
-  // })
-
-  console.log('loginResponse', loginResponse)
-  loginResponse.headers.forEach((key, value) => {
-    console.log({ key, value })
-  })
-  const setCookieHeaders = loginResponse.headers.getSetCookie()
   console.log({ setCookieHeaders })
 
-  const lowestMaxAge = setCookieHeaders
-    .map((setCookieHeaderValue) => {
-      const cookieFlags = Object.fromEntries(
+  const parsedSetCookieHeaders = setCookieHeaders.map(
+    (setCookieHeaderValue) => {
+      return Object.fromEntries(
         // This cookie parsing code is audacious, and probably fails in some unknown circumstances. A 3rd-party library may be advised if we run into issues.
         // (In the context of this exercise, I am avoiding copy/pasting code from online or just using a lib here.)
-        setCookieHeaderValue.split(';').map((cookieFlag) => {
+        setCookieHeaderValue.split('; ').map((cookieFlag) => {
           return cookieFlag.toLowerCase().split('=')
         })
       )
-      return parseInt(cookieFlags['max-age'], 10)
+    }
+  )
+
+  const lowestMaxAge = parsedSetCookieHeaders
+    .map((parsedSetCookieHeader) => {
+      return parseInt(parsedSetCookieHeader['max-age'], 10)
     })
     .sort()
+    .pop()
 
   console.log({ lowestMaxAge })
+  const cookiesString = parsedSetCookieHeaders.map(() => {})
 
   // TODO: save valid cookiesString to cookie-header.json
-  // loginResponse
 
   return ''
 }
